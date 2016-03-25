@@ -122,9 +122,43 @@ public class ActivityDetection {
                                          float y , 
                                          float z , 
                                          int accuracy ) {
+        if (isFirstMagReading) {
+            magXvalues = new float[NUM_AVERAGES];
+            magRunningAvgIndex = 0;
+            isFirstMagReading = false;
+            counter = 0;
+        }
+
+        if (timestamp > 1458699598032l && timestamp < 1458700021842l) {
+
+            double sum = 0;
+
+            magXvalues[magRunningAvgIndex] = x;
+            magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
+
+            for (float val : magXvalues) sum += val;
+            mxAvg = (int) (sum / NUM_AVERAGES);
+
+            int diff = Math.abs(mxAvg - (int) x);
+
+            if (diff > MX_THRESHOLD) {
+                if (!isPhoneMoving) {
+                    isPhoneMoving = true;
+                    System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+                }
+            } else {
+                if (isPhoneMoving) {
+                    isPhoneMoving = false;
+                    System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+                }
+            }
+
+            System.out.println(counter++ + " " + x);
+        }
+
     }
 
-    /** 
+    /**
        Called when the gyroscope sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
@@ -133,14 +167,14 @@ public class ActivityDetection {
        @param   z            Gyroscope z value (rad/sec)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onGyroscopeSensorChanged( long timestamp , 
-                                          float x , 
-                                          float y , 
-                                          float z , 
+    public void onGyroscopeSensorChanged( long timestamp ,
+                                          float x ,
+                                          float y ,
+                                          float z ,
                                           int accuracy ) {
     }
 
-    /** 
+    /**
        Called when the rotation vector sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
@@ -150,15 +184,15 @@ public class ActivityDetection {
        @param   scalar       Rotation vector scalar value (unitless)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onRotationVectorSensorChanged( long timestamp , 
-                                               float x , 
-                                               float y , 
-                                               float z , 
+    public void onRotationVectorSensorChanged( long timestamp ,
+                                               float x ,
+                                               float y ,
+                                               float z ,
                                                float scalar ,
                                                int accuracy ) {
     }
 
-    /** 
+    /**
        Called when the barometer sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
@@ -166,37 +200,37 @@ public class ActivityDetection {
        @param   altitude     Barometer altitude value w.r.t. standard sea level reference (meters)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onBarometerSensorChanged( long timestamp , 
-                                          float pressure , 
-                                          float altitude , 
+    public void onBarometerSensorChanged( long timestamp ,
+                                          float pressure ,
+                                          float altitude ,
                                           int accuracy ) {
     }
 
-    /** 
+    /**
        Called when the light sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
        @param   light        Light value (lux)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onLightSensorChanged( long timestamp , 
-                                      float light , 
+    public void onLightSensorChanged( long timestamp ,
+                                      float light ,
                                       int accuracy ) {
     }
 
-    /** 
+    /**
        Called when the proximity sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
        @param   proximity    Proximity value (cm)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onProximitySensorChanged( long timestamp , 
-                                          float proximity , 
+    public void onProximitySensorChanged( long timestamp ,
+                                          float proximity ,
                                           int accuracy ) {
     }
 
-    /** 
+    /**
        Called when the location sensor has changed.
 
        @param   timestamp    Timestamp of this location event
@@ -208,13 +242,13 @@ public class ActivityDetection {
        @param   bearing      Bearing (deg) (may be -1 if unavailable)
        @param   speed        Speed (m/sec) (may be -1 if unavailable)
      */
-    public void onLocationSensorChanged( long timestamp , 
-                                         String provider , 
-                                         double latitude , 
-                                         double longitude , 
-                                         float accuracy , 
-                                         double altitude , 
-                                         float bearing , 
+    public void onLocationSensorChanged( long timestamp ,
+                                         String provider ,
+                                         double latitude ,
+                                         double longitude ,
+                                         float accuracy ,
+                                         double altitude ,
+                                         float bearing ,
                                          float speed ) {
     }
 
@@ -235,12 +269,12 @@ public class ActivityDetection {
 
                 // Logging to the DDMS (in the simulator, the DDMS log is to the console)
                 System.out.println();
-                Log.i( "ActivitySim" , "Timer " + numberTimers + ": Current simulator time: " + 
+                Log.i( "ActivitySim" , "Timer " + numberTimers + ": Current simulator time: " +
                        convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) );
-                System.out.println( "Timer " + numberTimers + ": Current simulator time: " + 
+                System.out.println( "Timer " + numberTimers + ": Current simulator time: " +
                                     convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) );
 
-                // Dummy example of outputting a detected activity 
+                // Dummy example of outputting a detected activity
                 //  (to the file "DetectedActivities.txt" in the trace folder).
                 //  (here we just alternate between indoor and walking every 10 min)
                 if( ! isUserOutside ) {
@@ -253,11 +287,21 @@ public class ActivityDetection {
 
                 // Set a second timer to execute the same task 10 min later
                 ++numberTimers;
-                if( numberTimers <= 2 ) { 
+                if( numberTimers <= 2 ) {
                     SimulatorTimer timer = new SimulatorTimer();
                     timer.schedule( task ,             // Task to be executed
                                     10 * 60 * 1000 );  // Delay in millisec (10 min)
                 }
             }
         };
+
+    //Variables for Mag Stabilisation detection
+    private boolean isFirstMagReading = true;
+    private boolean isPhoneMoving = false;
+    private float[] magXvalues;
+    private int mxAvg;
+    private int magRunningAvgIndex;
+    private static final int NUM_AVERAGES = 20;
+    private static final int MX_THRESHOLD = 3;
+    private int counter;
 }
