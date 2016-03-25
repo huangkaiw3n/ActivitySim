@@ -127,9 +127,10 @@ public class ActivityDetection {
             magRunningAvgIndex = 0;
             isFirstMagReading = false;
             counter = 0;
+            phoneMovedTimestamp = timestamp;
         }
 
-        if (timestamp > 1458699598032l && timestamp < 1458700021842l) {
+        if (timestamp > 1458699598032l && timestamp < 1458700132295l) {
 
             double sum = 0;
 
@@ -144,18 +145,37 @@ public class ActivityDetection {
             if (diff > MX_THRESHOLD) {
                 if (!isPhoneMoving) {
                     isPhoneMoving = true;
+                    phoneMovedTimestamp = timestamp;
                     System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
                 }
-            } else {
+            }
+            else {
                 if (isPhoneMoving) {
                     isPhoneMoving = false;
+                    phoneMovedTimestamp = timestamp;
                     System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
                 }
             }
 
-            System.out.println(counter++ + " " + x);
-        }
+            checkWalking(timestamp);
 
+            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
+        }
+    }
+
+    /**
+     Assume person may be walking if phone was not stabilised for more than xxx milliseconds.
+     @param   timestamp    Timestamp of this sensor event
+
+     */
+    private void checkWalking(long timestamp){
+
+        if (timestamp - phoneMovedTimestamp > 10000 && !isPhoneMoving){
+            isMagStillForDuration = true;
+        }
+        else {
+            isMagStillForDuration = false;
+        }
     }
 
     /**
@@ -298,10 +318,13 @@ public class ActivityDetection {
     //Variables for Mag Stabilisation detection
     private boolean isFirstMagReading = true;
     private boolean isPhoneMoving = false;
+    private long phoneMovedTimestamp = 0;
     private float[] magXvalues;
     private int mxAvg;
     private int magRunningAvgIndex;
-    private static final int NUM_AVERAGES = 20;
+    private static final int NUM_AVERAGES = 40;
     private static final int MX_THRESHOLD = 3;
     private int counter;
+
+    private boolean isMagStillForDuration = true;
 }
