@@ -157,18 +157,17 @@ public class ActivityDetection {
                 }
             }
 
-            checkWalking(timestamp);
+            checkMagStill(timestamp);
 
             System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
         }
     }
 
     /**
-     Assume person may be walking if phone was not stabilised for more than xxx milliseconds.
+     Checks if Mag was still for more than xxx milliseconds.
      @param   timestamp    Timestamp of this sensor event
-
      */
-    private void checkWalking(long timestamp){
+    private void checkMagStill(long timestamp){
 
         if (timestamp - phoneMovedTimestamp > 10000 && !isPhoneMoving){
             isMagStillForDuration = true;
