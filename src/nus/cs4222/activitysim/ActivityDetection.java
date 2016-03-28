@@ -237,6 +237,10 @@ public class ActivityDetection {
     public void onLightSensorChanged( long timestamp ,
                                       float light ,
                                       int accuracy ) {
+        if (light < 289f)
+            isLowLight = true;
+        else
+            isLowLight = false;
     }
 
     /**
@@ -360,4 +364,7 @@ public class ActivityDetection {
     private float derivedSpeed = 0;
     private SVY21Coordinate previousCoord;
     private long previousCoordTimestamp;
+
+    //Variables Lux Data processing
+    private boolean isLowLight = false;
 }
