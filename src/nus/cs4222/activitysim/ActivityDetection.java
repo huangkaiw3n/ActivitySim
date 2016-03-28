@@ -108,9 +108,9 @@ public class ActivityDetection {
                                            float y , 
                                            float z , 
                                            int accuracy ) {
-    	if((timestamp > 1459056316716L && timestamp < 1459056557845L) || (timestamp > 1459058194698L)){
-    		//System.out.format("%f\n", y);
-    	}
+//    	if((timestamp > 1459056316716L && timestamp < 1459056557845L) || (timestamp > 1459058194698L)){
+//    		//System.out.format("%f\n", y);
+//    	}
 //	    try{
 //	    	File file =new File("lightdata-timestamp.txt");
 //	
@@ -143,45 +143,46 @@ public class ActivityDetection {
                                          float y , 
                                          float z , 
                                          int accuracy ) {
-//        if (isFirstMagReading) {
-//            magXvalues = new float[NUM_AVERAGES];
-//            magRunningAvgIndex = 0;
-//            isFirstMagReading = false;
-//            counter = 0;
-//            phoneMovedTimestamp = timestamp;
-//        }
-//
-//        if (timestamp > 1458699598032l && timestamp < 1458700132295l) {
-//
-//            double sum = 0;
-//
-//            magXvalues[magRunningAvgIndex] = x;
-//            magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
-//
-//            for (float val : magXvalues) sum += val;
-//            mxAvg = (int) (sum / NUM_AVERAGES);
-//
-//            int diff = Math.abs(mxAvg - (int) x);
-//
-//            if (diff > MX_THRESHOLD) {
-//                if (!isPhoneMoving) {
-//                    isPhoneMoving = true;
-//                    phoneMovedTimestamp = timestamp;
-//                    System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
-//                }
-//            }
-//            else {
-//                if (isPhoneMoving) {
-//                    isPhoneMoving = false;
-//                    phoneMovedTimestamp = timestamp;
-//                    System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
-//                }
-//            }
-//
-//            checkMagStill(timestamp);
-//
-//            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
-//        }
+        if (isFirstMagReading) {
+            magXvalues = new float[NUM_AVERAGES];
+            magRunningAvgIndex = 0;
+            isFirstMagReading = false;
+            counter = 0;
+            phoneMovedTimestamp = timestamp;
+//            mainAlgo.run();
+        }
+
+        else if (timestamp < 1459055051907l){
+
+            double sum = 0;
+
+            magXvalues[magRunningAvgIndex] = x;
+            magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
+
+            for (float val : magXvalues) sum += val;
+            mxAvg = (int) (sum / NUM_AVERAGES);
+
+            int diff = Math.abs(mxAvg - (int) x);
+
+            if (diff > MX_THRESHOLD) {
+                if (!isPhoneMoving) {
+                    isPhoneMoving = true;
+                    phoneMovedTimestamp = timestamp;
+                    System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+                }
+            }
+            else {
+                if (isPhoneMoving) {
+                    isPhoneMoving = false;
+                    phoneMovedTimestamp = timestamp;
+                    System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+                }
+            }
+
+            checkMagStill(timestamp);
+
+            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
+        }
     }
 
     /**
@@ -246,37 +247,37 @@ public class ActivityDetection {
                                           int accuracy ) {
     	
 //		if(timestamp > 1459055129717L && timestamp < 1459055561633L) {
-		if(timestamp > 1459058194698L) {
-	    	if(currAlt == 0 && prevAlt != 0) {
-	    		currAlt = altitude;
-	    		// compare here
-	    		if(Math.abs(currAlt - prevAlt) < stdDevAltWalk) {
-	    			walkBoolQ.add(true);
-	    		}
-	    		else if(Math.abs(currAlt - prevAlt) < stdDevAltVehicle) {
-	    			vehBoolQ.add(true);
-	    		}
-	    		
-	    		if(vehBoolQ.size() + walkBoolQ.size() == ALTITUDE_LIST_SIZE_LIMIT){
-	    			if(vehBoolQ.size() > walkBoolQ.size()){
-	    				System.out.println("Vehicle");
-	    			}
-	    			else{
-	    				System.out.println("Walking");
-	    			}
-	    			walkBoolQ = new LinkedList<Boolean>();
-	    			vehBoolQ = new LinkedList<Boolean>();
-	    		}
-	    		
-	    		
-	    		
-	    		prevAlt = currAlt;
-	    		currAlt = 0;
-	    	}
-	    	if(prevAlt == 0) {
-	    		prevAlt = altitude;
-	    	}
-		}
+//		if(timestamp > 1459058194698L) {
+//	    	if(currAlt == 0 && prevAlt != 0) {
+//	    		currAlt = altitude;
+//	    		// compare here
+//	    		if(Math.abs(currAlt - prevAlt) < stdDevAltWalk) {
+//	    			walkBoolQ.add(true);
+//	    		}
+//	    		else if(Math.abs(currAlt - prevAlt) < stdDevAltVehicle) {
+//	    			vehBoolQ.add(true);
+//	    		}
+//
+//	    		if(vehBoolQ.size() + walkBoolQ.size() == ALTITUDE_LIST_SIZE_LIMIT){
+//	    			if(vehBoolQ.size() > walkBoolQ.size()){
+//	    				System.out.println("Vehicle");
+//	    			}
+//	    			else{
+//	    				System.out.println("Walking");
+//	    			}
+//	    			walkBoolQ = new LinkedList<Boolean>();
+//	    			vehBoolQ = new LinkedList<Boolean>();
+//	    		}
+//
+//
+//
+//	    		prevAlt = currAlt;
+//	    		currAlt = 0;
+//	    	}
+//	    	if(prevAlt == 0) {
+//	    		prevAlt = altitude;
+//	    	}
+//		}
     }
 
     /**
@@ -328,57 +329,70 @@ public class ActivityDetection {
                                          float bearing ,
                                          float speed ) {
 
-//        boolean isOnBus = false;
-//        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
-//            isOnBus = true;
+        boolean isOnBus = false;
+        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
+            isOnBus = true;
+
+        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
+            isOnBus = true;
+
+        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
+            isOnBus = true;
+
+        if (provider.equals("gps") && isFirstLocReading){
+            isFirstLocReading = false;
+            previousCoord = new LatLonCoordinate(latitude,longitude).asSVY21();
+            previousCoordTimestamp = timestamp;
+        }
+
+        if (provider.equals("gps") && !isFirstLocReading && timestamp != previousCoordTimestamp) {
+            SVY21Coordinate currentCoord = new LatLonCoordinate(latitude, longitude).asSVY21();
+            changeInDistance = Math.sqrt(((Math.pow(currentCoord.getEasting() - previousCoord.getEasting(), 2)) +
+                    (Math.pow(currentCoord.getNorthing() - previousCoord.getNorthing(), 2))));
+            derivedSpeed = (float) (changeInDistance / ((timestamp - previousCoordTimestamp) / 1000));
+            previousCoord = currentCoord;
+            previousCoordTimestamp = timestamp;
+//            System.out.println("DistanceChange: " + changeInDistance + " " + "Speed: " + speed + " DerivedSpeed: " + derivedSpeed + " " + convertUnixTimeToReadableString(ActivitySimulator.currentTimeMillis()) + " Bus: " + isOnBus);
+
+            if (derivedSpeed > SPEED_THRESHOLD){
+                isSpeedHigh = true;
+            }
+            else {
+                if (isSpeedHigh) {
+                    isSpeedHigh = false;
+                    slowBusTimestamp = timestamp;
+                }
+            }
+        }
+
+
+
+//            speed = derivedSpeed;
 //
-//        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
-//            isOnBus = true;
+//            if (speed != -1) {
+//                if (speedList.size() == SPEED_LIST_SIZE_LIMIT) {
+//                    speedList.remove();
+//                }
+//                speedList.add(speed);
+//                float averageSpeed = 0;
+//                float totalSpeed = 0;
+//                for (int i = 0; i < speedList.size(); i++) {
+//                    totalSpeed = totalSpeed + speed;
+//                }
+//                averageSpeed = totalSpeed / speedList.size();
 //
-//        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
-//            isOnBus = true;
+//                if (averageSpeed > AVERAGE_HUMAN_WALKING_SPEED) {
+//                    System.out.format("%s\t%s\t%f\t%s\n", sdf.format(timestamp), "VEHICLE", speed, isOnBus);
 //
-//        if (provider.equals("gps") && isFirstLocReading){
-//            isFirstLocReading = false;
-//            previousCoord = new LatLonCoordinate(latitude,longitude).asSVY21();
-//            previousCoordTimestamp = timestamp;
+//                } else if (averageSpeed > 0) {
+//                    System.out.format("%s\t%s\t%f\t%s\n", sdf.format(timestamp), "WALKING", speed, isOnBus);
+//
+//                } else {
+//                    System.out.format("%s\t%s\t%f\t%s\n", sdf.format(timestamp), "IDLE", speed, isOnBus);
+//
+//                }
+//            }
 //        }
-//
-//        if (provider.equals("gps") && !isFirstLocReading && timestamp != previousCoordTimestamp) {
-//            SVY21Coordinate currentCoord = new LatLonCoordinate(latitude, longitude).asSVY21();
-//            changeInDistance = Math.sqrt(((Math.pow(currentCoord.getEasting() - previousCoord.getEasting(),2)) +
-//                    (Math.pow(currentCoord.getNorthing() - previousCoord.getNorthing(),2))));
-//            derivedSpeed = (float)(changeInDistance / ((timestamp - previousCoordTimestamp)/1000));
-//            previousCoord = currentCoord;
-//            previousCoordTimestamp = timestamp;
-//            System.out.println("DistanceChange: " + changeInDistance + " " + "DerivedSpeed: " + derivedSpeed + " " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) + " Bus: " + isOnBus);
-//        }
-    	if(speed != -1) {
-    		if(speedList.size() == SPEED_LIST_SIZE_LIMIT){
-    			speedList.remove();
-    		}
-    		speedList.add(speed);
-    		float averageSpeed = 0;
-    		float totalSpeed = 0;
-    		for(int i=0; i<speedList.size(); i++) {
-    			totalSpeed = totalSpeed + speed;
-    		}
-    		averageSpeed = totalSpeed / speedList.size();
-    		
-    		if( averageSpeed > AVERAGE_HUMAN_WALKING_SPEED) {
-    			System.out.format("%s\t%s\t%f\n", sdf.format(timestamp), "VEHICLE", speed);
-
-    		}
-    		else if (averageSpeed > 0){
-    			System.out.format("%s\t%s\t%f\n", sdf.format(timestamp), "WALKING", speed);
-
-    		}
-    		else {
-    			System.out.format("%s\t%s\t%f\n", sdf.format(timestamp), "IDLE", speed);
-
-    		}
-    	}
-    	
     	
     }
 
@@ -425,13 +439,66 @@ public class ActivityDetection {
             }
         };
 
+    private void notVehicleAlgo() {
+        if (isMagStillForDuration ){
+            if (isLowLight){
+                if (currentState != UserActivities.IDLE_INDOOR) {
+                    ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
+                    currentState = UserActivities.IDLE_INDOOR;
+                }
+            }
+            else{
+                if (currentState != UserActivities.IDLE_OUTDOOR) {
+                    ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
+                    currentState = UserActivities.IDLE_OUTDOOR;
+                }
+            }
+        }
+        else {
+            if (isSpeedHigh){
+                if (currentState != UserActivities.BUS){
+                    ActivitySimulator.outputDetectedActivity(UserActivities.BUS);
+                    currentState = UserActivities.BUS;
+                }
+            }
+            else {
+                if (currentState != UserActivities.WALKING){
+                    ActivitySimulator.outputDetectedActivity(UserActivities.WALKING);
+                    currentState = UserActivities.WALKING;
+                }
+            }
+        }
+    }
+
     private Runnable mainAlgo = new Runnable() {
         public void run() {
-            //still requires termination criteria
-            SimulatorTimer timer = new SimulatorTimer();
-            timer.schedule( mainAlgo ,             // Task to be executed
-                    1000 );  // Delay in millisec (1 sec)
-            System.out.println("yup " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+//            System.out.println("yup " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+
+            if(isMainAlgoFirstRun){
+                SimulatorTimer timer = new SimulatorTimer();
+                timer.schedule(mainAlgo,             // Task to be executed
+                        11000);
+                isMainAlgoFirstRun = false;
+            }
+            else {
+                if (currentState == UserActivities.BUS){
+                    if (!isSpeedHigh){
+                        timeDiff = ActivitySimulator.currentTimeMillis() - slowBusTimestamp;
+                        if (timeDiff > 30000){
+                            notVehicleAlgo();
+                        }
+                    }
+
+                }
+                else {
+                    notVehicleAlgo();
+                }
+
+                SimulatorTimer timer = new SimulatorTimer();
+                timer.schedule(mainAlgo,             // Task to be executed
+                        1000);
+
+            }
         }
     };
 
@@ -454,6 +521,8 @@ public class ActivityDetection {
     private float derivedSpeed = 0;
     private SVY21Coordinate previousCoord;
     private long previousCoordTimestamp;
+    private boolean isSpeedHigh = false;
+    private static final float SPEED_THRESHOLD = 3;
 
     //Variables Lux Data processing
     private boolean isLowLight = false;
@@ -470,5 +539,11 @@ public class ActivityDetection {
 	private Queue<Boolean> vehBoolQ = new LinkedList<Boolean>();
 	
     private double stdDevAltWalk = 0.280311076;
-    private double stdDevAltVehicle = 0.5416665;    
+    private double stdDevAltVehicle = 0.5416665;
+
+    //Main algo
+    private UserActivities currentState = UserActivities.NONE;
+    private boolean isMainAlgoFirstRun = true;
+    private long slowBusTimestamp = 0;
+    private long timeDiff;
 }
