@@ -7,6 +7,8 @@ import java.text.*;
 import android.hardware.*;
 import android.util.*;
 
+import net.qxcg.svy21.*;
+
 /**
    Class containing the activity detection algorithm.
 
@@ -122,45 +124,45 @@ public class ActivityDetection {
                                          float y , 
                                          float z , 
                                          int accuracy ) {
-        if (isFirstMagReading) {
-            magXvalues = new float[NUM_AVERAGES];
-            magRunningAvgIndex = 0;
-            isFirstMagReading = false;
-            counter = 0;
-            phoneMovedTimestamp = timestamp;
-        }
-
-        if (timestamp > 1458699598032l && timestamp < 1458700132295l) {
-
-            double sum = 0;
-
-            magXvalues[magRunningAvgIndex] = x;
-            magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
-
-            for (float val : magXvalues) sum += val;
-            mxAvg = (int) (sum / NUM_AVERAGES);
-
-            int diff = Math.abs(mxAvg - (int) x);
-
-            if (diff > MX_THRESHOLD) {
-                if (!isPhoneMoving) {
-                    isPhoneMoving = true;
-                    phoneMovedTimestamp = timestamp;
-                    System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
-                }
-            }
-            else {
-                if (isPhoneMoving) {
-                    isPhoneMoving = false;
-                    phoneMovedTimestamp = timestamp;
-                    System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
-                }
-            }
-
-            checkMagStill(timestamp);
-
-            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
-        }
+//        if (isFirstMagReading) {
+//            magXvalues = new float[NUM_AVERAGES];
+//            magRunningAvgIndex = 0;
+//            isFirstMagReading = false;
+//            counter = 0;
+//            phoneMovedTimestamp = timestamp;
+//        }
+//
+//        if (timestamp > 1458699598032l && timestamp < 1458700132295l) {
+//
+//            double sum = 0;
+//
+//            magXvalues[magRunningAvgIndex] = x;
+//            magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
+//
+//            for (float val : magXvalues) sum += val;
+//            mxAvg = (int) (sum / NUM_AVERAGES);
+//
+//            int diff = Math.abs(mxAvg - (int) x);
+//
+//            if (diff > MX_THRESHOLD) {
+//                if (!isPhoneMoving) {
+//                    isPhoneMoving = true;
+//                    phoneMovedTimestamp = timestamp;
+//                    System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+//                }
+//            }
+//            else {
+//                if (isPhoneMoving) {
+//                    isPhoneMoving = false;
+//                    phoneMovedTimestamp = timestamp;
+//                    System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+//                }
+//            }
+//
+//            checkMagStill(timestamp);
+//
+//            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
+//        }
     }
 
     /**
@@ -269,6 +271,31 @@ public class ActivityDetection {
                                          double altitude ,
                                          float bearing ,
                                          float speed ) {
+        boolean isOnBus = false;
+        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
+            isOnBus = true;
+
+        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
+            isOnBus = true;
+
+        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
+            isOnBus = true;
+
+        if (provider.equals("gps") && isFirstLocReading){
+            isFirstLocReading = false;
+            previousCoord = new LatLonCoordinate(latitude,longitude).asSVY21();
+            previousCoordTimestamp = timestamp;
+        }
+
+        if (provider.equals("gps") && !isFirstLocReading && timestamp != previousCoordTimestamp) {
+            SVY21Coordinate currentCoord = new LatLonCoordinate(latitude, longitude).asSVY21();
+            changeInDistance = Math.sqrt(((Math.pow(currentCoord.getEasting() - previousCoord.getEasting(),2)) +
+                    (Math.pow(currentCoord.getNorthing() - previousCoord.getNorthing(),2))));
+            derivedSpeed = (float)(changeInDistance / ((timestamp - previousCoordTimestamp)/1000));
+            previousCoord = currentCoord;
+            previousCoordTimestamp = timestamp;
+            System.out.println("DistanceChange: " + changeInDistance + " " + "DerivedSpeed: " + derivedSpeed + " " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) + " Bus: " + isOnBus);
+        }
     }
 
     /** Helper method to convert UNIX millis time into a human-readable string. */
@@ -326,4 +353,11 @@ public class ActivityDetection {
     private int counter;
 
     private boolean isMagStillForDuration = true;
+
+    //Variables for Loc Data processing
+    private boolean isFirstLocReading = true;
+    private double changeInDistance = 0;
+    private float derivedSpeed = 0;
+    private SVY21Coordinate previousCoord;
+    private long previousCoordTimestamp;
 }
