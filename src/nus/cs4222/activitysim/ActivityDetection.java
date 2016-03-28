@@ -108,6 +108,25 @@ public class ActivityDetection {
                                            float y , 
                                            float z , 
                                            int accuracy ) {
+    	if((timestamp > 1459056316716L && timestamp < 1459056557845L) || (timestamp > 1459058194698L)){
+    		//System.out.format("%f\n", y);
+    	}
+//	    try{
+//	    	File file =new File("lightdata-timestamp.txt");
+//	
+//	    	if(!file.exists()){
+//	    	   file.createNewFile();
+//	    	}
+//
+//	    	FileWriter fw = new FileWriter(file,true);
+//	    	BufferedWriter bw = new BufferedWriter(fw);
+//	    	bw.write(String.format("%d\n", timestamp));
+//	    	bw.close();
+//
+//      }	catch(IOException ioe){
+//	         System.out.println("Exception occurred:");
+//	    	 ioe.printStackTrace();
+//       }
     }
 
     /** 
@@ -225,6 +244,39 @@ public class ActivityDetection {
                                           float pressure ,
                                           float altitude ,
                                           int accuracy ) {
+    	
+//		if(timestamp > 1459055129717L && timestamp < 1459055561633L) {
+		if(timestamp > 1459058194698L) {
+	    	if(currAlt == 0 && prevAlt != 0) {
+	    		currAlt = altitude;
+	    		// compare here
+	    		if(Math.abs(currAlt - prevAlt) < stdDevAltWalk) {
+	    			walkBoolQ.add(true);
+	    		}
+	    		else if(Math.abs(currAlt - prevAlt) < stdDevAltVehicle) {
+	    			vehBoolQ.add(true);
+	    		}
+	    		
+	    		if(vehBoolQ.size() + walkBoolQ.size() == ALTITUDE_LIST_SIZE_LIMIT){
+	    			if(vehBoolQ.size() > walkBoolQ.size()){
+	    				System.out.println("Vehicle");
+	    			}
+	    			else{
+	    				System.out.println("Walking");
+	    			}
+	    			walkBoolQ = new LinkedList<Boolean>();
+	    			vehBoolQ = new LinkedList<Boolean>();
+	    		}
+	    		
+	    		
+	    		
+	    		prevAlt = currAlt;
+	    		currAlt = 0;
+	    	}
+	    	if(prevAlt == 0) {
+	    		prevAlt = altitude;
+	    	}
+		}
     }
 
     /**
@@ -275,6 +327,7 @@ public class ActivityDetection {
                                          double altitude ,
                                          float bearing ,
                                          float speed ) {
+
 //        boolean isOnBus = false;
 //        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
 //            isOnBus = true;
@@ -300,6 +353,33 @@ public class ActivityDetection {
 //            previousCoordTimestamp = timestamp;
 //            System.out.println("DistanceChange: " + changeInDistance + " " + "DerivedSpeed: " + derivedSpeed + " " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) + " Bus: " + isOnBus);
 //        }
+    	if(speed != -1) {
+    		if(speedList.size() == SPEED_LIST_SIZE_LIMIT){
+    			speedList.remove();
+    		}
+    		speedList.add(speed);
+    		float averageSpeed = 0;
+    		float totalSpeed = 0;
+    		for(int i=0; i<speedList.size(); i++) {
+    			totalSpeed = totalSpeed + speed;
+    		}
+    		averageSpeed = totalSpeed / speedList.size();
+    		
+    		if( averageSpeed > AVERAGE_HUMAN_WALKING_SPEED) {
+    			System.out.format("%s\t%s\t%f\n", sdf.format(timestamp), "VEHICLE", speed);
+
+    		}
+    		else if (averageSpeed > 0){
+    			System.out.format("%s\t%s\t%f\n", sdf.format(timestamp), "WALKING", speed);
+
+    		}
+    		else {
+    			System.out.format("%s\t%s\t%f\n", sdf.format(timestamp), "IDLE", speed);
+
+    		}
+    	}
+    	
+    	
     }
 
     /** Helper method to convert UNIX millis time into a human-readable string. */
@@ -377,4 +457,18 @@ public class ActivityDetection {
 
     //Variables Lux Data processing
     private boolean isLowLight = false;
+	
+    private Queue<Float> speedList = new LinkedList<Float>();
+    private static final int SPEED_LIST_SIZE_LIMIT = 5;
+    private static final double AVERAGE_HUMAN_WALKING_SPEED = 1.4;
+    
+
+    private static final int ALTITUDE_LIST_SIZE_LIMIT = 9;
+	private float prevAlt = 0;
+	private float currAlt = 0;
+	private Queue<Boolean> walkBoolQ = new LinkedList<Boolean>();
+	private Queue<Boolean> vehBoolQ = new LinkedList<Boolean>();
+	
+    private double stdDevAltWalk = 0.280311076;
+    private double stdDevAltVehicle = 0.5416665;    
 }
