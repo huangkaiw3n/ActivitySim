@@ -275,31 +275,31 @@ public class ActivityDetection {
                                          double altitude ,
                                          float bearing ,
                                          float speed ) {
-        boolean isOnBus = false;
-        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
-            isOnBus = true;
-
-        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
-            isOnBus = true;
-
-        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
-            isOnBus = true;
-
-        if (provider.equals("gps") && isFirstLocReading){
-            isFirstLocReading = false;
-            previousCoord = new LatLonCoordinate(latitude,longitude).asSVY21();
-            previousCoordTimestamp = timestamp;
-        }
-
-        if (provider.equals("gps") && !isFirstLocReading && timestamp != previousCoordTimestamp) {
-            SVY21Coordinate currentCoord = new LatLonCoordinate(latitude, longitude).asSVY21();
-            changeInDistance = Math.sqrt(((Math.pow(currentCoord.getEasting() - previousCoord.getEasting(),2)) +
-                    (Math.pow(currentCoord.getNorthing() - previousCoord.getNorthing(),2))));
-            derivedSpeed = (float)(changeInDistance / ((timestamp - previousCoordTimestamp)/1000));
-            previousCoord = currentCoord;
-            previousCoordTimestamp = timestamp;
-            System.out.println("DistanceChange: " + changeInDistance + " " + "DerivedSpeed: " + derivedSpeed + " " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) + " Bus: " + isOnBus);
-        }
+//        boolean isOnBus = false;
+//        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
+//            isOnBus = true;
+//
+//        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
+//            isOnBus = true;
+//
+//        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
+//            isOnBus = true;
+//
+//        if (provider.equals("gps") && isFirstLocReading){
+//            isFirstLocReading = false;
+//            previousCoord = new LatLonCoordinate(latitude,longitude).asSVY21();
+//            previousCoordTimestamp = timestamp;
+//        }
+//
+//        if (provider.equals("gps") && !isFirstLocReading && timestamp != previousCoordTimestamp) {
+//            SVY21Coordinate currentCoord = new LatLonCoordinate(latitude, longitude).asSVY21();
+//            changeInDistance = Math.sqrt(((Math.pow(currentCoord.getEasting() - previousCoord.getEasting(),2)) +
+//                    (Math.pow(currentCoord.getNorthing() - previousCoord.getNorthing(),2))));
+//            derivedSpeed = (float)(changeInDistance / ((timestamp - previousCoordTimestamp)/1000));
+//            previousCoord = currentCoord;
+//            previousCoordTimestamp = timestamp;
+//            System.out.println("DistanceChange: " + changeInDistance + " " + "DerivedSpeed: " + derivedSpeed + " " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) + " Bus: " + isOnBus);
+//        }
     }
 
     /** Helper method to convert UNIX millis time into a human-readable string. */
@@ -344,6 +344,16 @@ public class ActivityDetection {
                 }
             }
         };
+
+    private Runnable mainAlgo = new Runnable() {
+        public void run() {
+            //still requires termination criteria
+            SimulatorTimer timer = new SimulatorTimer();
+            timer.schedule( mainAlgo ,             // Task to be executed
+                    1000 );  // Delay in millisec (1 sec)
+            System.out.println("yup " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+        }
+    };
 
     //Variables for Mag Stabilisation detection
     private boolean isFirstMagReading = true;
