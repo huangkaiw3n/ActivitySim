@@ -35,3 +35,5 @@ build/classes/nus/cs4222/activitysim/SimulatorTimer.class
 build/classes/nus/cs4222/activitysim/TimerEvent.class
 build/classes/nus/cs4222/activitysim/UserActivities.class
 build/classes/android/hardware/Sensor.class
+lightData.txt
+lightdata-timestamp.txt
