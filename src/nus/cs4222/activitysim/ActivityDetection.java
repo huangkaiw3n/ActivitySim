@@ -152,12 +152,17 @@ public class ActivityDetection {
 //            mainAlgo.run();
         }
 
-        else if (timestamp < 1459055051907l){
+        if (timestamp < 1459055051907l){
 
             double sum = 0;
 
             magXvalues[magRunningAvgIndex] = x;
             magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
+
+            if (counter < NUM_AVERAGES-1){
+                counter++;
+                return;
+            }
 
             for (float val : magXvalues) sum += val;
             mxAvg = (int) (sum / NUM_AVERAGES);
@@ -191,11 +196,24 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 10000 && !isPhoneMoving){
+        if (timestamp - phoneMovedTimestamp > 10000 && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
+            isFluctuating = false;
+            return;
         }
-        else {
+        else if (timestamp - phoneMovedTimestamp > 10000 && isPhoneMoving){ //phone moved for more than x seconds
             isMagStillForDuration = false;
+            isFluctuating = false;
+            return;
+        }
+
+        if (!isFluctuating) {
+            fluctuatingTimestamp = timestamp;
+            isFluctuating = true;
+        }
+        else if (timestamp - fluctuatingTimestamp > 12000){ //phone was unstable for more than x seconds
+            isMagStillForDuration = false;
+            return;
         }
     }
 
@@ -439,66 +457,80 @@ public class ActivityDetection {
             }
         };
 
-    private void notVehicleAlgo() {
-        if (isMagStillForDuration ){
-            if (isLowLight){
-                if (currentState != UserActivities.IDLE_INDOOR) {
-                    ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
-                    currentState = UserActivities.IDLE_INDOOR;
-                }
-            }
-            else{
-                if (currentState != UserActivities.IDLE_OUTDOOR) {
-                    ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
-                    currentState = UserActivities.IDLE_OUTDOOR;
-                }
-            }
+    private void executeLater(Runnable toRun, int mililiseconds){
+        SimulatorTimer timer = new SimulatorTimer();
+        timer.schedule(toRun, mililiseconds);
+    }
+
+    private void vehicleOrWalking(){
+        if(isSpeedHigh) {
+            ActivitySimulator.outputDetectedActivity(UserActivities.BUS);
+            currentState = UserActivities.BUS;
+            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
         }
         else {
-            if (isSpeedHigh){
-                if (currentState != UserActivities.BUS){
-                    ActivitySimulator.outputDetectedActivity(UserActivities.BUS);
-                    currentState = UserActivities.BUS;
-                }
-            }
-            else {
-                if (currentState != UserActivities.WALKING){
-                    ActivitySimulator.outputDetectedActivity(UserActivities.WALKING);
-                    currentState = UserActivities.WALKING;
-                }
-            }
+            ActivitySimulator.outputDetectedActivity(UserActivities.WALKING);
+            currentState = UserActivities.WALKING;
+            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+        }
+    }
+
+    private void idlingIndoorOrOutdoor(){
+        if(isLowLight) {
+            ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
+            currentState = UserActivities.IDLE_INDOOR;
+            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+        }
+        else{
+            ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
+            currentState = UserActivities.IDLE_OUTDOOR;
+            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
         }
     }
 
     private Runnable mainAlgo = new Runnable() {
         public void run() {
-//            System.out.println("yup " + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
 
-            if(isMainAlgoFirstRun){
-                SimulatorTimer timer = new SimulatorTimer();
-                timer.schedule(mainAlgo,             // Task to be executed
-                        11000);
-                isMainAlgoFirstRun = false;
+            if (mainAlgoFirstRun){
+                executeLater(mainAlgo, 15000);
+                mainAlgoFirstRun = false;
+                return;
             }
-            else {
-                if (currentState == UserActivities.BUS){
-                    if (!isSpeedHigh){
-                        timeDiff = ActivitySimulator.currentTimeMillis() - slowBusTimestamp;
-                        if (timeDiff > 30000){
-                            notVehicleAlgo();
-                        }
+
+            switch (currentState){
+                case NONE:
+                    if (isMagStillForDuration){
+                        idlingIndoorOrOutdoor();
                     }
-
-                }
-                else {
-                    notVehicleAlgo();
-                }
-
-                SimulatorTimer timer = new SimulatorTimer();
-                timer.schedule(mainAlgo,             // Task to be executed
-                        1000);
-
+                    else{
+                        vehicleOrWalking();
+                    }
+                    break;
+                case IDLE_INDOOR:
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    if(isMagStillForDuration)
+                        return;
+                    else{
+                        vehicleOrWalking();
+                    }
+                    break;
+                case IDLE_OUTDOOR:
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    break;
+                case BUS:
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    break;
+                case WALKING:
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    break;
+                default:
+                    break;
             }
+
         }
     };
 
@@ -512,7 +544,8 @@ public class ActivityDetection {
     private static final int NUM_AVERAGES = 40;
     private static final int MX_THRESHOLD = 3;
     private int counter;
-
+    private long fluctuatingTimestamp = 0;
+    private boolean isFluctuating = false;
     private boolean isMagStillForDuration = true;
 
     //Variables for Loc Data processing
@@ -543,7 +576,8 @@ public class ActivityDetection {
 
     //Main algo
     private UserActivities currentState = UserActivities.NONE;
-    private boolean isMainAlgoFirstRun = true;
+    private boolean mainAlgoFirstRun = true;
     private long slowBusTimestamp = 0;
     private long timeDiff;
+    private long lastStateChangeTimestamp = 0;
 }
