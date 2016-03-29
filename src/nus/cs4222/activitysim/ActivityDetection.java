@@ -201,7 +201,7 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 64000 && !isPhoneMoving){ //phone still for more than x seconds
+        if (timestamp - phoneMovedTimestamp > 32000 && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
             isFluctuating = false;
             return;
