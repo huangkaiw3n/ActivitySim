@@ -191,7 +191,7 @@ public class ActivityDetection {
 
         checkMagStill(timestamp);
 
-        if (timestamp >= 1459058047810l && timestamp <=1459058179654l)
+        if (timestamp <=1459053128109l)
             System.out.println(convertUnixTimeToReadableString(timestamp) + " " + x + " " + isMagStillForDuration + " " + isPhoneMoving + " " + isFluctuating);
     }
 
@@ -201,7 +201,7 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 32000 && !isPhoneMoving){ //phone still for more than x seconds
+        if (timestamp - phoneMovedTimestamp > 64000 && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
             isFluctuating = false;
             return;
@@ -211,6 +211,9 @@ public class ActivityDetection {
             isFluctuating = false;
             return;
         }
+
+        if (currentState == UserActivities.NONE)
+            return;
 
         if (!isFluctuating) {
             fluctuatingTimestamp = timestamp;
@@ -541,7 +544,7 @@ public class ActivityDetection {
     private Runnable mainAlgo = new Runnable() {
         public void run() {
             if (mainAlgoFirstRun){
-                executeLater(mainAlgo, 50000);
+                executeLater(mainAlgo, 70000);
                 mainAlgoFirstRun = false;
                 return;
             } else if (ActivitySimulator.currentTimeMillis() < 1459060560796l)
