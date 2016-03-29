@@ -318,13 +318,12 @@ public class ActivityDetection {
         luxValues[luxRunningAverageIndex] = light;
         luxRunningAverageIndex = (luxRunningAverageIndex + 1) % NUM_AVERAGES_LUX;
 
-        if (luxCounter < NUM_AVERAGES_LUX-1){
+        if (luxCounter < NUM_AVERAGES_LUX){
             luxCounter++;
-            return;
         }
 
         for (float val : luxValues) sum += val;
-        luxAvg = (sum / NUM_AVERAGES_LUX);
+        luxAvg = (sum / luxCounter);
 
         debugLight = luxAvg;
 
