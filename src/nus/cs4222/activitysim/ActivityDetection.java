@@ -149,45 +149,42 @@ public class ActivityDetection {
             isFirstMagReading = false;
             counter = 0;
             phoneMovedTimestamp = timestamp;
-//            mainAlgo.run();
+            mainAlgo.run();
         }
 
-        if (timestamp < 1459055051907l){
+        double sum = 0;
 
-            double sum = 0;
+        magXvalues[magRunningAvgIndex] = x;
+        magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
 
-            magXvalues[magRunningAvgIndex] = x;
-            magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
-
-            if (counter < NUM_AVERAGES-1){
-                counter++;
-                return;
-            }
-
-            for (float val : magXvalues) sum += val;
-            mxAvg = (int) (sum / NUM_AVERAGES);
-
-            int diff = Math.abs(mxAvg - (int) x);
-
-            if (diff > MX_THRESHOLD) {
-                if (!isPhoneMoving) {
-                    isPhoneMoving = true;
-                    phoneMovedTimestamp = timestamp;
-                    System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
-                }
-            }
-            else {
-                if (isPhoneMoving) {
-                    isPhoneMoving = false;
-                    phoneMovedTimestamp = timestamp;
-                    System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
-                }
-            }
-
-            checkMagStill(timestamp);
-
-            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
+        if (counter < NUM_AVERAGES-1){
+            counter++;
+            return;
         }
+
+        for (float val : magXvalues) sum += val;
+        mxAvg = (int) (sum / NUM_AVERAGES);
+
+        int diff = Math.abs(mxAvg - (int) x);
+
+        if (diff > MX_THRESHOLD) {
+            if (!isPhoneMoving) {
+                isPhoneMoving = true;
+                phoneMovedTimestamp = timestamp;
+//                System.out.println("                    Moving!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+            }
+        }
+        else {
+            if (isPhoneMoving) {
+                isPhoneMoving = false;
+                phoneMovedTimestamp = timestamp;
+//                System.out.println("                    Stable!" + convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ));
+            }
+        }
+
+        checkMagStill(timestamp);
+
+//            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
     }
 
     /**
@@ -347,15 +344,15 @@ public class ActivityDetection {
                                          float bearing ,
                                          float speed ) {
 
-        boolean isOnBus = false;
-        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
-            isOnBus = true;
-
-        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
-            isOnBus = true;
-
-        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
-            isOnBus = true;
+//        boolean isOnBus = false;
+//        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
+//            isOnBus = true;
+//
+//        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
+//            isOnBus = true;
+//
+//        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
+//            isOnBus = true;
 
         if (provider.equals("gps") && isFirstLocReading){
             isFirstLocReading = false;
@@ -374,16 +371,21 @@ public class ActivityDetection {
 
             if (derivedSpeed > SPEED_THRESHOLD){
                 isSpeedHigh = true;
+                isOnVehicle = true;
             }
             else {
                 if (isSpeedHigh) {
                     isSpeedHigh = false;
                     slowBusTimestamp = timestamp;
                 }
+                if (timestamp - slowBusTimestamp > 1000 * 130){ //delay to decide user is now off vehicle
+                    isOnVehicle = false;
+                }
+                isSpeedHigh = false;
             }
         }
 
-
+//        System.out.println(convertUnixTimeToReadableString(timestamp) + " " + isOnVehicle + " " + derivedSpeed);
 
 //            speed = derivedSpeed;
 //
@@ -463,7 +465,7 @@ public class ActivityDetection {
     }
 
     private void vehicleOrWalking(){
-        if(isSpeedHigh) {
+        if(isOnVehicle) {
             ActivitySimulator.outputDetectedActivity(UserActivities.BUS);
             currentState = UserActivities.BUS;
             lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
@@ -490,47 +492,72 @@ public class ActivityDetection {
 
     private Runnable mainAlgo = new Runnable() {
         public void run() {
-
             if (mainAlgoFirstRun){
                 executeLater(mainAlgo, 15000);
                 mainAlgoFirstRun = false;
                 return;
-            }
+            } else if (ActivitySimulator.currentTimeMillis() < 1459060560796l)
+                executeLater(mainAlgo, 2000);
 
             switch (currentState){
-                case NONE:
-                    if (isMagStillForDuration){
+                case NONE: {
+                    if (isMagStillForDuration)
                         idlingIndoorOrOutdoor();
-                    }
-                    else{
+                    else
                         vehicleOrWalking();
-                    }
                     break;
-                case IDLE_INDOOR:
+                }
+                case IDLE_INDOOR: {
                     if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
                         return;
-                    if(isMagStillForDuration)
-                        return;
-                    else{
+                    if (isMagStillForDuration) {
+                        if (isLowLight)
+                            return;
+                        else
+                            idlingIndoorOrOutdoor();
+                    } else
                         vehicleOrWalking();
+                    break;
+                }
+                case IDLE_OUTDOOR: {
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    if (isMagStillForDuration) {
+                        if (!isLowLight)
+                            return;
+                        else
+                            idlingIndoorOrOutdoor();
+                    } else
+                        vehicleOrWalking();
+                    break;
+                }
+                case BUS: {
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    if (isOnVehicle)
+                        return;
+                    else if (isMagStillForDuration)
+                        idlingIndoorOrOutdoor();
+                    else
+                        vehicleOrWalking();
+                    break;
+                }
+                case WALKING: {
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    if (!isMagStillForDuration) {
+                        if (!isOnVehicle)
+                            return;
+                        else
+                            vehicleOrWalking();
                     }
+                    else
+                        idlingIndoorOrOutdoor();
                     break;
-                case IDLE_OUTDOOR:
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
-                        return;
-                    break;
-                case BUS:
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
-                        return;
-                    break;
-                case WALKING:
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
-                        return;
-                    break;
+                }
                 default:
                     break;
             }
-
         }
     };
 
@@ -555,7 +582,8 @@ public class ActivityDetection {
     private SVY21Coordinate previousCoord;
     private long previousCoordTimestamp;
     private boolean isSpeedHigh = false;
-    private static final float SPEED_THRESHOLD = 3;
+    private static final float SPEED_THRESHOLD = 6;
+    private boolean isOnVehicle = false;
 
     //Variables Lux Data processing
     private boolean isLowLight = false;
