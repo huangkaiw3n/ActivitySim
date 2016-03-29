@@ -145,6 +145,7 @@ public class ActivityDetection {
                                          int accuracy ) {
         if (isFirstMagReading) {
             magXvalues = new float[NUM_AVERAGES_MX];
+            magYvalues = new float[NUM_AVERAGES_MX];
             magRunningAvgIndex = 0;
             isFirstMagReading = false;
             magCounter = 0;
@@ -152,9 +153,8 @@ public class ActivityDetection {
             mainAlgo.run();
         }
 
-        double sum = 0;
-
         magXvalues[magRunningAvgIndex] = x;
+        magYvalues[magRunningAvgIndex] = y;
         magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES_MX;
 
         if (magCounter < NUM_AVERAGES_MX-1){
@@ -162,12 +162,17 @@ public class ActivityDetection {
             return;
         }
 
-        for (float val : magXvalues) sum += val;
-        mxAvg = (int) (sum / NUM_AVERAGES_MX);
+        double sumX, sumY;
+        sumX = sumY = 0;
+        for (float val : magXvalues) sumX += val;
+        for (float val : magYvalues) sumY += val;
+        mxAvg = (int) (sumX / NUM_AVERAGES_MX);
+        myAvg = (int) (sumY / NUM_AVERAGES_MX);
 
-        int diff = Math.abs(mxAvg - (int) x);
+        int diffX = Math.abs(mxAvg - (int) x);
+        int diffY = Math.abs(myAvg - (int) y);
 
-        if (diff > MX_THRESHOLD) {
+        if (diffX > MX_THRESHOLD || diffY > MX_THRESHOLD) {
             if (!isPhoneMoving) {
                 isPhoneMoving = true;
                 phoneMovedTimestamp = timestamp;
@@ -198,7 +203,7 @@ public class ActivityDetection {
             isFluctuating = false;
             return;
         }
-        else if (timestamp - phoneMovedTimestamp > 10000 && isPhoneMoving){ //phone moved for more than x seconds
+        else if (timestamp - phoneMovedTimestamp > 15000 && isPhoneMoving){ //phone moved for more than x seconds
             isMagStillForDuration = false;
             isFluctuating = false;
             return;
@@ -589,8 +594,8 @@ public class ActivityDetection {
     private boolean isFirstMagReading = true;
     private boolean isPhoneMoving = false;
     private long phoneMovedTimestamp = 0;
-    private float[] magXvalues;
-    private int mxAvg;
+    private float[] magXvalues, magYvalues;
+    private int mxAvg, myAvg;
     private int magRunningAvgIndex;
     private static final int NUM_AVERAGES_MX = 40;
     private static final int MX_THRESHOLD = 3;
