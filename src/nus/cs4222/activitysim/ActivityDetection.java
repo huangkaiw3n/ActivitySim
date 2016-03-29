@@ -144,10 +144,10 @@ public class ActivityDetection {
                                          float z , 
                                          int accuracy ) {
         if (isFirstMagReading) {
-            magXvalues = new float[NUM_AVERAGES];
+            magXvalues = new float[NUM_AVERAGES_MX];
             magRunningAvgIndex = 0;
             isFirstMagReading = false;
-            counter = 0;
+            magCounter = 0;
             phoneMovedTimestamp = timestamp;
             mainAlgo.run();
         }
@@ -155,15 +155,15 @@ public class ActivityDetection {
         double sum = 0;
 
         magXvalues[magRunningAvgIndex] = x;
-        magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES;
+        magRunningAvgIndex = (magRunningAvgIndex + 1) % NUM_AVERAGES_MX;
 
-        if (counter < NUM_AVERAGES-1){
-            counter++;
+        if (magCounter < NUM_AVERAGES_MX-1){
+            magCounter++;
             return;
         }
 
         for (float val : magXvalues) sum += val;
-        mxAvg = (int) (sum / NUM_AVERAGES);
+        mxAvg = (int) (sum / NUM_AVERAGES_MX);
 
         int diff = Math.abs(mxAvg - (int) x);
 
@@ -184,7 +184,7 @@ public class ActivityDetection {
 
         checkMagStill(timestamp);
 
-//            System.out.println(counter++ + " " + x + " " + isMagStillForDuration);
+//            System.out.println(magCounter++ + " " + x + " " + isMagStillForDuration);
     }
 
     /**
@@ -305,7 +305,30 @@ public class ActivityDetection {
     public void onLightSensorChanged( long timestamp ,
                                       float light ,
                                       int accuracy ) {
-        if (light < 289f)
+
+        if (isFirstLuxReading){
+            luxValues = new float[NUM_AVERAGES_LUX];
+            isFirstLuxReading = false;
+            luxRunningAverageIndex = 0;
+            luxCounter = 0;
+        }
+
+        float sum = 0;
+
+        luxValues[luxRunningAverageIndex] = light;
+        luxRunningAverageIndex = (luxRunningAverageIndex + 1) % NUM_AVERAGES_LUX;
+
+        if (luxCounter < NUM_AVERAGES_LUX-1){
+            luxCounter++;
+            return;
+        }
+
+        for (float val : luxValues) sum += val;
+        luxAvg = (sum / NUM_AVERAGES_LUX);
+
+        debugLight = luxAvg;
+
+        if (luxAvg < 289f)
             isLowLight = true;
         else
             isLowLight = false;
@@ -482,11 +505,13 @@ public class ActivityDetection {
             ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
             currentState = UserActivities.IDLE_INDOOR;
             lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+            System.out.println(debugLight);
         }
         else{
             ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
             currentState = UserActivities.IDLE_OUTDOOR;
             lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+
         }
     }
 
@@ -568,9 +593,9 @@ public class ActivityDetection {
     private float[] magXvalues;
     private int mxAvg;
     private int magRunningAvgIndex;
-    private static final int NUM_AVERAGES = 40;
+    private static final int NUM_AVERAGES_MX = 40;
     private static final int MX_THRESHOLD = 3;
-    private int counter;
+    private int magCounter;
     private long fluctuatingTimestamp = 0;
     private boolean isFluctuating = false;
     private boolean isMagStillForDuration = true;
@@ -587,6 +612,12 @@ public class ActivityDetection {
 
     //Variables Lux Data processing
     private boolean isLowLight = false;
+    private float[] luxValues;
+    private boolean isFirstLuxReading = true;
+    private static final int NUM_AVERAGES_LUX = 7;
+    private float luxAvg;
+    private int luxRunningAverageIndex;
+    private int luxCounter;
 	
     private Queue<Float> speedList = new LinkedList<Float>();
     private static final int SPEED_LIST_SIZE_LIMIT = 5;
@@ -608,4 +639,5 @@ public class ActivityDetection {
     private long slowBusTimestamp = 0;
     private long timeDiff;
     private long lastStateChangeTimestamp = 0;
+    private float debugLight;
 }
