@@ -187,9 +187,12 @@ public class ActivityDetection {
             }
         }
 
+        phoneMovementRecord[magRunningAvgIndex] = isPhoneMoving;
+
         checkMagStill(timestamp);
 
-//            System.out.println(magCounter++ + " " + x + " " + isMagStillForDuration);
+        if (timestamp >= 1459058047810l && timestamp <=1459058179654l)
+            System.out.println(convertUnixTimeToReadableString(timestamp) + " " + x + " " + isMagStillForDuration + " " + isPhoneMoving + " " + isFluctuating);
     }
 
     /**
@@ -198,12 +201,12 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 40000 && !isPhoneMoving){ //phone still for more than x seconds
+        if (timestamp - phoneMovedTimestamp > 32000 && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
             isFluctuating = false;
             return;
         }
-        else if (timestamp - phoneMovedTimestamp > 35000 && isPhoneMoving){ //phone moved for more than x seconds
+        else if (timestamp - phoneMovedTimestamp > 15000 && isPhoneMoving){ //phone moved for more than x seconds
             isMagStillForDuration = false;
             isFluctuating = false;
             return;
@@ -213,7 +216,7 @@ public class ActivityDetection {
             fluctuatingTimestamp = timestamp;
             isFluctuating = true;
         }
-        else if (timestamp - fluctuatingTimestamp > 50000){ //phone was unstable for more than x seconds
+        else if (timestamp - fluctuatingTimestamp > 40000){ //phone was unstable for more than x seconds
             isMagStillForDuration = false;
             return;
         }
@@ -332,7 +335,7 @@ public class ActivityDetection {
 
         debugLight = luxAvg;
 
-        if (luxAvg < 289f)
+        if (luxAvg < 279f)
             isLowLight = true;
         else
             isLowLight = false;
@@ -519,6 +522,22 @@ public class ActivityDetection {
         }
     }
 
+    private boolean determineStability(){
+        int positives = 0, negatives = 0;
+
+        for (boolean val: phoneMovementRecord){
+            if (val)
+                positives++;
+            else
+                negatives++;
+        }
+
+        if (positives > negatives)
+            return true;
+        else
+            return false;
+    }
+
     private Runnable mainAlgo = new Runnable() {
         public void run() {
             if (mainAlgoFirstRun){
@@ -544,8 +563,14 @@ public class ActivityDetection {
                             return;
                         else
                             idlingIndoorOrOutdoor();
-                    } else
+                    } else if (!isFluctuating)
                         vehicleOrWalking();
+                    else{
+                        if(determineStability())
+                            vehicleOrWalking();
+                        else
+                            idlingIndoorOrOutdoor();
+                    }
                     break;
                 }
                 case IDLE_OUTDOOR: {
@@ -556,19 +581,14 @@ public class ActivityDetection {
                             return;
                         else
                             idlingIndoorOrOutdoor();
-                    } else
+                    } else if (!isFluctuating)
                         vehicleOrWalking();
-                    break;
-                }
-                case BUS: {
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
-                        return;
-                    if (isOnVehicle)
-                        return;
-                    else if (isMagStillForDuration)
-                        idlingIndoorOrOutdoor();
-                    else
-                        vehicleOrWalking();
+                    else{
+                        if(determineStability())
+                            vehicleOrWalking();
+                        else
+                            idlingIndoorOrOutdoor();
+                    }
                     break;
                 }
                 case WALKING: {
@@ -582,6 +602,17 @@ public class ActivityDetection {
                     }
                     else
                         idlingIndoorOrOutdoor();
+                    break;
+                }
+                case BUS: {
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                        return;
+                    if (isOnVehicle)
+                        return;
+                    else if (isMagStillForDuration)
+                        idlingIndoorOrOutdoor();
+                    else
+                        vehicleOrWalking();
                     break;
                 }
                 default:
@@ -603,6 +634,7 @@ public class ActivityDetection {
     private long fluctuatingTimestamp = 0;
     private boolean isFluctuating = false;
     private boolean isMagStillForDuration = true;
+    private boolean[] phoneMovementRecord = new boolean[40];
 
     //Variables for Loc Data processing
     private boolean isFirstLocReading = true;
