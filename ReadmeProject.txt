@@ -35,7 +35,7 @@ Detection of motion is done using the magnetometer values. Using the x and y val
 If the phone was not moving completely for A seconds, then the isMagStillForDuration would be true. If the phone was moving continuosly for B seconds, then isMagStillForDuration would be false. Otherwise, if the phone was fluctuating between still and movement for C seconds, isMagstillForDuration would be false and isFluctuating will be true.
 
 Location Service:
-Using purely gps data received, the user's speed is calculated using the distance and time between consecutive readings. The speed data provided by the GPS is not used as it does not seem to be accurate and fine enough. When the speed exceeds a threshold, isOnVehicle is set to true. However, when speed falls below the threshold, isOnVehicle is not set to false until D seconds later. This is to accomodate the times when the vehicle is stationary.
+Using purely gps data received, the user's speed is calculated using the distance and time between consecutive readings. The speed data provided by the GPS is not used as it is less accurate. Distance calculation is done by converting the Lat Lons to a flat coordinate system (SVY21), then calculating the distance between the 2 coordinates. The conversion is done using the library here https://github.com/cgcai/SVY21. When the speed exceeds a threshold, isOnVehicle is set to true. However, when speed falls below the threshold, isOnVehicle is not set to false until D seconds later. This is to accomodate the times when the vehicle is stationary.
 
 Light Sensor:
 The light sensor data is used to determine whetehr the user is outdoor or indoor when IDLE is detected. Currently, a small running average of the 7 latest lux values are taken and compared with a threshold value E to determine outdoors or indoors, setting the boolean, isLowLight.
@@ -61,4 +61,4 @@ When isOnVehicle is true, the state is kept same.
 Else, if isMagStillForDuration is true, the user will be considered to be IDLE, and OUTDOOR or INDOOR is determined by isLowLight.
 If isMagStillForDuration is false, the user will be consdiered to be walking.
 
-Currently, there is also a minimum time of 20 seconds before state is allowed to be changed in the main algo.
+Currently, there is also a minimum time of 20 seconds before state is allowed to be changed in the main algo. The results of the whole algorithm will be further tweaked based on the larger pool of data in the next phase of the project. One way this could be done is by adjusting the respective delays and latency.
