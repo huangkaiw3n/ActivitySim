@@ -60,22 +60,6 @@ public class ActivityDetection {
                                      float y , 
                                      float z , 
                                      int accuracy ) {
-
-        // Process the sensor data as they arrive in each callback, 
-        //  with all the processing in the callback itself (don't create threads).
-
-        // You will most likely not need to use Timers at all, it is just 
-        //  provided for convenience if you require.
-
-        // Here, we just show a dummy example of creating a timer 
-        //  to execute a task 10 minutes later.
-        // Be careful not to create too many timers!
-//        if( isFirstAcclReading ) {
-//            isFirstAcclReading = false;
-//            SimulatorTimer timer = new SimulatorTimer();
-//            timer.schedule( this.task ,        // Task to be executed
-//                            10 * 60 * 1000 );  // Delay in millisec (10 min)
-//        }
     }
 
     /** 
@@ -108,25 +92,6 @@ public class ActivityDetection {
                                            float y , 
                                            float z , 
                                            int accuracy ) {
-//    	if((timestamp > 1459056316716L && timestamp < 1459056557845L) || (timestamp > 1459058194698L)){
-//    		//System.out.format("%f\n", y);
-//    	}
-//	    try{
-//	    	File file =new File("lightdata-timestamp.txt");
-//	
-//	    	if(!file.exists()){
-//	    	   file.createNewFile();
-//	    	}
-//
-//	    	FileWriter fw = new FileWriter(file,true);
-//	    	BufferedWriter bw = new BufferedWriter(fw);
-//	    	bw.write(String.format("%d\n", timestamp));
-//	    	bw.close();
-//
-//      }	catch(IOException ioe){
-//	         System.out.println("Exception occurred:");
-//	    	 ioe.printStackTrace();
-//       }
     }
 
     /** 
@@ -191,8 +156,8 @@ public class ActivityDetection {
 
         checkMagStill(timestamp);
 
-        if (timestamp <=1459053128109l)
-            System.out.println(convertUnixTimeToReadableString(timestamp) + " " + x + " " + isMagStillForDuration + " " + isPhoneMoving + " " + isFluctuating);
+//        if (timestamp <=1459053128109l)
+//            System.out.println(convertUnixTimeToReadableString(timestamp) + " " + x + " " + isMagStillForDuration + " " + isPhoneMoving + " " + isFluctuating);
     }
 
     /**
@@ -201,7 +166,7 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 32000 && !isPhoneMoving){ //phone still for more than x seconds
+        if (timestamp - phoneMovedTimestamp > 64000 && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
             isFluctuating = false;
             return;
@@ -271,39 +236,7 @@ public class ActivityDetection {
                                           float pressure ,
                                           float altitude ,
                                           int accuracy ) {
-    	
-//		if(timestamp > 1459055129717L && timestamp < 1459055561633L) {
-//		if(timestamp > 1459058194698L) {
-//	    	if(currAlt == 0 && prevAlt != 0) {
-//	    		currAlt = altitude;
-//	    		// compare here
-//	    		if(Math.abs(currAlt - prevAlt) < stdDevAltWalk) {
-//	    			walkBoolQ.add(true);
-//	    		}
-//	    		else if(Math.abs(currAlt - prevAlt) < stdDevAltVehicle) {
-//	    			vehBoolQ.add(true);
-//	    		}
-//
-//	    		if(vehBoolQ.size() + walkBoolQ.size() == ALTITUDE_LIST_SIZE_LIMIT){
-//	    			if(vehBoolQ.size() > walkBoolQ.size()){
-//	    				System.out.println("Vehicle");
-//	    			}
-//	    			else{
-//	    				System.out.println("Walking");
-//	    			}
-//	    			walkBoolQ = new LinkedList<Boolean>();
-//	    			vehBoolQ = new LinkedList<Boolean>();
-//	    		}
-//
-//
-//
-//	    		prevAlt = currAlt;
-//	    		currAlt = 0;
-//	    	}
-//	    	if(prevAlt == 0) {
-//	    		prevAlt = altitude;
-//	    	}
-//		}
+
     }
 
     /**
@@ -377,16 +310,6 @@ public class ActivityDetection {
                                          float bearing ,
                                          float speed ) {
 
-//        boolean isOnBus = false;
-//        if (timestamp >= 1458700132295l && timestamp <= 1458701610135l)
-//            isOnBus = true;
-//
-//        if (timestamp >= 1458701995994l && timestamp <= 1458702225037l)
-//            isOnBus = true;
-//
-//        if (timestamp >= 1458705414330l && timestamp <= 1458705595448l)
-//            isOnBus = true;
-
         if (provider.equals("gps") && isFirstLocReading){
             isFirstLocReading = false;
             previousCoord = new LatLonCoordinate(latitude,longitude).asSVY21();
@@ -417,36 +340,6 @@ public class ActivityDetection {
                 isSpeedHigh = false;
             }
         }
-
-//        System.out.println(convertUnixTimeToReadableString(timestamp) + " " + isOnVehicle + " " + derivedSpeed);
-
-//            speed = derivedSpeed;
-//
-//            if (speed != -1) {
-//                if (speedList.size() == SPEED_LIST_SIZE_LIMIT) {
-//                    speedList.remove();
-//                }
-//                speedList.add(speed);
-//                float averageSpeed = 0;
-//                float totalSpeed = 0;
-//                for (int i = 0; i < speedList.size(); i++) {
-//                    totalSpeed = totalSpeed + speed;
-//                }
-//                averageSpeed = totalSpeed / speedList.size();
-//
-//                if (averageSpeed > AVERAGE_HUMAN_WALKING_SPEED) {
-//                    System.out.format("%s\t%s\t%f\t%s\n", sdf.format(timestamp), "VEHICLE", speed, isOnBus);
-//
-//                } else if (averageSpeed > 0) {
-//                    System.out.format("%s\t%s\t%f\t%s\n", sdf.format(timestamp), "WALKING", speed, isOnBus);
-//
-//                } else {
-//                    System.out.format("%s\t%s\t%f\t%s\n", sdf.format(timestamp), "IDLE", speed, isOnBus);
-//
-//                }
-//            }
-//        }
-    	
     }
 
     /** Helper method to convert UNIX millis time into a human-readable string. */
@@ -456,41 +349,6 @@ public class ActivityDetection {
 
     /** To format the UNIX millis time as a human-readable string. */
     private static final SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd-h-mm-ssa" );
-
-    // Dummy variables used in the dummy timer code example
-    private boolean isFirstAcclReading = true;
-    private boolean isUserOutside = false;
-    private int numberTimers = 1;
-    private Runnable task = new Runnable() {
-            public void run() {
-
-                // Logging to the DDMS (in the simulator, the DDMS log is to the console)
-                System.out.println();
-                Log.i( "ActivitySim" , "Timer " + numberTimers + ": Current simulator time: " +
-                       convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) );
-                System.out.println( "Timer " + numberTimers + ": Current simulator time: " +
-                                    convertUnixTimeToReadableString( ActivitySimulator.currentTimeMillis() ) );
-
-                // Dummy example of outputting a detected activity
-                //  (to the file "DetectedActivities.txt" in the trace folder).
-                //  (here we just alternate between indoor and walking every 10 min)
-                if( ! isUserOutside ) {
-                    ActivitySimulator.outputDetectedActivity( UserActivities.IDLE_INDOOR );
-                }
-                else {
-                    ActivitySimulator.outputDetectedActivity( UserActivities.WALKING );
-                }
-                isUserOutside = !isUserOutside;
-
-                // Set a second timer to execute the same task 10 min later
-                ++numberTimers;
-                if( numberTimers <= 2 ) {
-                    SimulatorTimer timer = new SimulatorTimer();
-                    timer.schedule( task ,             // Task to be executed
-                                    10 * 60 * 1000 );  // Delay in millisec (10 min)
-                }
-            }
-        };
 
     private void executeLater(Runnable toRun, int mililiseconds){
         SimulatorTimer timer = new SimulatorTimer();
@@ -515,7 +373,7 @@ public class ActivityDetection {
             ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
             currentState = UserActivities.IDLE_INDOOR;
             lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
-            System.out.println(debugLight);
+//            System.out.println(debugLight);
         }
         else{
             ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
@@ -657,26 +515,11 @@ public class ActivityDetection {
     private float luxAvg;
     private int luxRunningAverageIndex;
     private int luxCounter;
-	
-    private Queue<Float> speedList = new LinkedList<Float>();
-    private static final int SPEED_LIST_SIZE_LIMIT = 5;
-    private static final double AVERAGE_HUMAN_WALKING_SPEED = 1.4;
-    
-
-    private static final int ALTITUDE_LIST_SIZE_LIMIT = 9;
-	private float prevAlt = 0;
-	private float currAlt = 0;
-	private Queue<Boolean> walkBoolQ = new LinkedList<Boolean>();
-	private Queue<Boolean> vehBoolQ = new LinkedList<Boolean>();
-	
-    private double stdDevAltWalk = 0.280311076;
-    private double stdDevAltVehicle = 0.5416665;
 
     //Main algo
     private UserActivities currentState = UserActivities.NONE;
     private boolean mainAlgoFirstRun = true;
     private long slowBusTimestamp = 0;
-    private long timeDiff;
     private long lastStateChangeTimestamp = 0;
     private float debugLight;
 }
