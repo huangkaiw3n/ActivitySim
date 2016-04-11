@@ -56,9 +56,9 @@ public class ActivityDetection {
         // You will most likely not need to use Timers at all, it is just 
         //  provided for convenience if you require.
         // REMOVE THIS DUMMY CODE (2 lines below), otherwise it will mess up your algorithm's output
-        SimulatorTimer timer = new SimulatorTimer();
-        timer.schedule( this.task ,        // Task to be executed
-                        10 * 60 * 1000 );  // Delay in millisec (10 min)
+//        SimulatorTimer timer = new SimulatorTimer();
+//        timer.schedule( this.task ,        // Task to be executed
+//                        10 * 60 * 1000 );  // Delay in millisec (10 min)
     }
 
     /** De-initialises the detection algorithm. */
@@ -428,7 +428,8 @@ public class ActivityDetection {
                 executeLater(mainAlgo, 70000);
                 mainAlgoFirstRun = false;
                 return;
-            } else if (ActivitySimulator.currentTimeMillis() < 1459060560796l)
+            }
+            else
                 executeLater(mainAlgo, 2000);
 
             switch (currentState){
