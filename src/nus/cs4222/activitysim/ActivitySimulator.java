@@ -18,7 +18,9 @@ import java.util.*;
     'ActivityDetection.java'. Then, compile and execute the simulator
     on the sensor data you collected.
    While executing the program, you must provide a path to the folder
-    containing the sensor data (log files from the sdcard).
+    containing the sensor data (log files from the sdcard). The 
+    folder can contain multiple traces (each trace in a different
+    sub-folder). In this case, each trace is simulated independently.
 
    Compiling:
    $ ant jarify
@@ -31,32 +33,70 @@ public class ActivitySimulator {
     public static void main( String[] args ) {
         try {
 
-            // Check the number of arguments
+            // Check the arguments
             if( args.length != 1 ) {
                 System.err.println( "Usage: java -jar ActivitySim.jar <path-to-your-trace-folder>" );
                 return;
             }
+            File folder = new File( args[0] );
+            if( ! folder.isDirectory() ) {
+                throw new IllegalArgumentException( "Invalid trace folder: \'" + 
+                                                    folder.getPath() + "\' is not a valid directory" );
+            }
 
-            // Store and check the trace folder
-            checkTraceFolder( args[0] );
-            // Create all the parsers for the sensor log files
-            initParsers();
-            // Open the log file for detected activities
-            resultLogger.openLogFile( traceFolder , DETECTED_ACTIVITIES_LOG_FILENAME );
+            // Make a list of trace folders
+            checkForTraceFolders( folder );
+            // Check if no traces were found
+            if( traceFolderList.isEmpty() ) {
+                throw new Exception( "No traces found! Make sure that you specified the correct path to the folder with traces." );
+            }
 
-            // Initialise the simulator time
-            simulatorTime = 0L;
-            // Populate the event data structure with the first few sensor events
-            populateFewEvents();
-            // Run the simulator
-            runSimulator();
+            // Simulate each trace one by one independently
+            for( File traceFolder : traceFolderList ) {
+
+                // Output the trace that is currently being simulated
+                System.out.println();
+                System.out.println( "Simulating the trace in folder \'" + traceFolder.getPath() + "\'..." );
+
+                try {
+                    // Initialise any variables for the simulation
+                    initSimulation();
+                    // Create all the parsers for the sensor log files
+                    initParsers( traceFolder );
+                    // Open the log file for detected activities
+                    resultLogger.openLogFile( traceFolder , DETECTED_ACTIVITIES_LOG_FILENAME );
+
+                    // Populate the event data structure with the first few sensor events
+                    populateFewEvents();
+                    // Initialise the simulator time
+                    simulatorTime = 0L;
+                    if( ! eventSet.isEmpty() ) {
+                        simulatorTime = eventSet.first().event.timestamp;
+                    }
+                    // Initialise the detection algo
+                    detectionAlgo.initDetection();
+                    // Run the simulator
+                    runSimulator();
+                    // De-initialise the detection algo
+                    detectionAlgo.deinitDetection();
+                }
+                finally {
+                    // Close the detected activities log file
+                    resultLogger.closeLogFile();
+                }
+            }
+
+            // Output the traces that were simulated
+            System.out.println();
+            System.out.println( "List of traces that were simulated are below." );
+            System.out.println( "Check the \'DetectedActivities.txt\' file in each trace folder to check the output of your algorithm." );
+            System.out.println( "Run ActivityEval to calculate the aggregated accuracy and latency over all the traces together." );
+            for( File traceFolder : traceFolderList ) {
+                System.out.println( "\t" + traceFolder.getPath() );
+            }
         }
         catch( Exception e ) {
             e.printStackTrace();
-        }
-        finally {
-            // Close the detected activities log file
-            resultLogger.closeLogFile();
         }
     }
 
@@ -93,15 +133,26 @@ public class ActivitySimulator {
         }
     }
 
-    /** Stores the path to the trace folder, and checks if all traces are present. */
-    private static void checkTraceFolder( String traceFolderPath ) {
+    /** Makes a list of all traces in this folder. */
+    private static void checkForTraceFolders( File folder ) {
 
-        // Check if the path is a valid directory
-        traceFolder = new File( traceFolderPath );
-        if( ! traceFolder.isDirectory() ) {
-            throw new IllegalArgumentException( "Invalid trace folder: \'" + 
-                                                traceFolderPath + "\' is not a valid directory" );
+        // Scan for sub-folders
+        File[] files = folder.listFiles();
+        for( File file : files ) {
+            if( file.isDirectory() ) {
+                checkForTraceFolders( file );
+            }
         }
+
+        // Check if this folder has a trace
+        if( checkIfTraceFolder( folder ) ) {
+            traceFolderList.add( folder );
+            System.out.println( "Found a data collection trace in folder \'" + folder.getPath() + "\'" );
+        }
+    }
+
+    /** Checks if this is a folder containing a valid trace. */
+    private static boolean checkIfTraceFolder( File folder ) {
 
         // Check if the folder has all the sensor log files
         String[] logFilenameList = 
@@ -114,19 +165,29 @@ public class ActivitySimulator {
                            ROTATION_VECTOR_LOG_FILENAME , 
                            BAROMETER_LOG_FILENAME , 
                            LIGHT_LOG_FILENAME , 
-                           PROXIMITY_LOG_FILENAME , 
-                           GROUND_TRUTH_LOG_FILENAME };
+                           PROXIMITY_LOG_FILENAME };
+                           //GROUND_TRUTH_LOG_FILENAME };
         for( String logFilename : logFilenameList ) {
-            File logFile = new File( traceFolder , logFilename );
+            File logFile = new File( folder , logFilename );
             if( ! logFile.isFile() ) {
-                throw new IllegalArgumentException( "Trace folder does not contain the log file \'" + 
-                                                    logFilename + "\'" );
+                return false;
             }
         }
+
+        return true;
+    }
+
+    /** Initialises any variables for the simulation. */
+    private static void initSimulation() {
+        detectionAlgo = new ActivityDetection();
+        prevDetectedActivity = UserActivities.Confirm;
+        parserList.clear();
+        eventSet.clear();
+        numSensorEvents = 0;
     }
 
     /** Initialises the parsers for all the sensor log files. */
-    private static void initParsers() 
+    private static void initParsers( File traceFolder ) 
         throws IOException {
 
         // Add parsers for each sensor
@@ -156,6 +217,9 @@ public class ActivitySimulator {
                                                         parser );
                 // Add it to the event data structure
                 eventSet.add( eventTuple );
+
+                // UPDATE: Increase the number of sensor events
+                ++numSensorEvents;
             }
         }
     }
@@ -166,7 +230,10 @@ public class ActivitySimulator {
 
         // Consume each simulator event one by one until there are no more events.
         // The events are processed in the order of timestamps.
-        while( ! eventSet.isEmpty() ) {
+        //while( ! eventSet.isEmpty() ) {
+        // UPDATE: Run the simulator until there are no more sensor events.
+        //  This can happen if the event set has only timer events, or is empty.
+        while( numSensorEvents > 0 ) { 
 
             // Get the earliest event
             EventTuple eventTuple = eventSet.first();
@@ -174,13 +241,21 @@ public class ActivitySimulator {
             SimulatorEvent event = eventTuple.event;
             SensorLogParser parser = eventTuple.parser;
 
-            // For a sensor log event, add the next event to the event data structure
-            if( parser != null && 
-                parser.hasNextEvent() ) {
-                SimulatorEvent nextEvent = parser.getNextEvent();
-                EventTuple nextEventTuple = new EventTuple( nextEvent , 
-                                                            parser );
-                eventSet.add( nextEventTuple );
+            // UPDATE: If it is a sensor log event, then
+            //  decrease the number of sensor events
+            if( parser != null ) {
+                --numSensorEvents;
+
+                // For a sensor log event, add the next event to the event data structure
+                if( parser.hasNextEvent() ) {
+                    SimulatorEvent nextEvent = parser.getNextEvent();
+                    EventTuple nextEventTuple = new EventTuple( nextEvent , 
+                                                                parser );
+                    eventSet.add( nextEventTuple );
+
+                    // UPDATE: Increase the number of sensor events
+                    ++numSensorEvents;
+                }
             }
 
             // Update the simulator time
@@ -212,15 +287,18 @@ public class ActivitySimulator {
     /** List of sensor log file parsers. */
     private static List< SensorLogParser > parserList = 
         new ArrayList< SensorLogParser >();
+    // UPDATE: Keep track of the number of sensor events
+    /** Number of sensor events in the event set. */
+    private static int numSensorEvents;
 
     /** Current simulator time (millisecs since epoch). */
     private static long simulatorTime;
 
     /** Detection algorithm. */
-    private static ActivityDetection detectionAlgo = 
-        new ActivityDetection();
-    /** Folder containing the sensor traces. */
-    private static File traceFolder;
+    private static ActivityDetection detectionAlgo;
+    /** List of traces. */
+    private static List< File > traceFolderList = 
+        new ArrayList< File >();
 
     /** Tuple of (simulator event, sensor log parser). */
     private static class EventTuple 
@@ -247,7 +325,7 @@ public class ActivitySimulator {
     /** Logger to log detected activities by the activity detection algorithm. */
     private static FileLogger resultLogger = new FileLogger();
     /** Previous detected activity logged (to avoid duplicates). */
-    private static UserActivities prevDetectedActivity = UserActivities.Confirm;
+    private static UserActivities prevDetectedActivity;
     /** Name of the detected activities log file. */
     private static final String DETECTED_ACTIVITIES_LOG_FILENAME = "DetectedActivities.txt";
 
@@ -262,5 +340,5 @@ public class ActivitySimulator {
     private static final String BAROMETER_LOG_FILENAME = "Baro.txt";
     private static final String LIGHT_LOG_FILENAME = "Light.txt";
     private static final String PROXIMITY_LOG_FILENAME = "Proximity.txt";
-    private static final String GROUND_TRUTH_LOG_FILENAME = "GroundTruth.txt";
+    //private static final String GROUND_TRUTH_LOG_FILENAME = "GroundTruth.txt";
 }

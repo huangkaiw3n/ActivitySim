@@ -46,6 +46,27 @@ import net.qxcg.svy21.*;
  */
 public class ActivityDetection {
 
+    /** Initialises the detection algorithm. */
+    public void initDetection() 
+        throws Exception {
+        // Add initialisation code here, if any
+
+        // Here, we just show a dummy example of a timer that runs every 10 min, 
+        //  outputting WALKING and INDOOR alternatively.
+        // You will most likely not need to use Timers at all, it is just 
+        //  provided for convenience if you require.
+        // REMOVE THIS DUMMY CODE (2 lines below), otherwise it will mess up your algorithm's output
+        SimulatorTimer timer = new SimulatorTimer();
+        timer.schedule( this.task ,        // Task to be executed
+                        10 * 60 * 1000 );  // Delay in millisec (10 min)
+    }
+
+    /** De-initialises the detection algorithm. */
+    public void deinitDetection() 
+        throws Exception {
+        // Add de-initialisation code here, if any
+    }
+
     /** 
        Called when the accelerometer sensor has changed.
 
@@ -60,6 +81,9 @@ public class ActivityDetection {
                                      float y , 
                                      float z , 
                                      int accuracy ) {
+
+        // Process the sensor data as they arrive in each callback, 
+        //  with all the processing in the callback itself (don't create threads).
     }
 
     /** 
@@ -190,7 +214,7 @@ public class ActivityDetection {
         }
     }
 
-    /**
+    /** 
        Called when the gyroscope sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
@@ -199,14 +223,14 @@ public class ActivityDetection {
        @param   z            Gyroscope z value (rad/sec)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onGyroscopeSensorChanged( long timestamp ,
-                                          float x ,
-                                          float y ,
-                                          float z ,
+    public void onGyroscopeSensorChanged( long timestamp , 
+                                          float x , 
+                                          float y , 
+                                          float z , 
                                           int accuracy ) {
     }
 
-    /**
+    /** 
        Called when the rotation vector sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
@@ -216,15 +240,15 @@ public class ActivityDetection {
        @param   scalar       Rotation vector scalar value (unitless)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onRotationVectorSensorChanged( long timestamp ,
-                                               float x ,
-                                               float y ,
-                                               float z ,
+    public void onRotationVectorSensorChanged( long timestamp , 
+                                               float x , 
+                                               float y , 
+                                               float z , 
                                                float scalar ,
                                                int accuracy ) {
     }
 
-    /**
+    /** 
        Called when the barometer sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
@@ -232,22 +256,21 @@ public class ActivityDetection {
        @param   altitude     Barometer altitude value w.r.t. standard sea level reference (meters)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onBarometerSensorChanged( long timestamp ,
-                                          float pressure ,
-                                          float altitude ,
+    public void onBarometerSensorChanged( long timestamp , 
+                                          float pressure , 
+                                          float altitude , 
                                           int accuracy ) {
-
     }
 
-    /**
+    /** 
        Called when the light sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
        @param   light        Light value (lux)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onLightSensorChanged( long timestamp ,
-                                      float light ,
+    public void onLightSensorChanged( long timestamp , 
+                                      float light , 
                                       int accuracy ) {
 
         if (isFirstLuxReading){
@@ -277,19 +300,19 @@ public class ActivityDetection {
             isLowLight = false;
     }
 
-    /**
+    /** 
        Called when the proximity sensor has changed.
 
        @param   timestamp    Timestamp of this sensor event
        @param   proximity    Proximity value (cm)
        @param   accuracy     Accuracy of the sensor data (you can ignore this)
      */
-    public void onProximitySensorChanged( long timestamp ,
-                                          float proximity ,
+    public void onProximitySensorChanged( long timestamp , 
+                                          float proximity , 
                                           int accuracy ) {
     }
 
-    /**
+    /** 
        Called when the location sensor has changed.
 
        @param   timestamp    Timestamp of this location event
@@ -301,13 +324,13 @@ public class ActivityDetection {
        @param   bearing      Bearing (deg) (may be -1 if unavailable)
        @param   speed        Speed (m/sec) (may be -1 if unavailable)
      */
-    public void onLocationSensorChanged( long timestamp ,
-                                         String provider ,
-                                         double latitude ,
-                                         double longitude ,
-                                         float accuracy ,
-                                         double altitude ,
-                                         float bearing ,
+    public void onLocationSensorChanged( long timestamp , 
+                                         String provider , 
+                                         double latitude , 
+                                         double longitude , 
+                                         float accuracy , 
+                                         double altitude , 
+                                         float bearing , 
                                          float speed ) {
 
         if (provider.equals("gps") && isFirstLocReading){
