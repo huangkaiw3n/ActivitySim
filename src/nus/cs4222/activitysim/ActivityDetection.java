@@ -190,7 +190,7 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 64000 && !isPhoneMoving){ //phone still for more than x seconds
+        if (timestamp - phoneMovedTimestamp > 30000 && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
             isFluctuating = false;
             return;
@@ -294,7 +294,7 @@ public class ActivityDetection {
 
         debugLight = luxAvg;
 
-        if (luxAvg < 279f)
+        if (luxAvg < 350f)
             isLowLight = true;
         else
             isLowLight = false;
@@ -528,7 +528,7 @@ public class ActivityDetection {
     private SVY21Coordinate previousCoord;
     private long previousCoordTimestamp;
     private boolean isSpeedHigh = false;
-    private static final float SPEED_THRESHOLD = 6;
+    private static final float SPEED_THRESHOLD = 5;
     private boolean isOnVehicle = false;
 
     //Variables Lux Data processing
