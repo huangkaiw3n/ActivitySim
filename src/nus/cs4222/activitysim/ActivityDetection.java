@@ -375,32 +375,42 @@ public class ActivityDetection {
         timer.schedule(toRun, mililiseconds);
     }
 
+    private void outputStateVechicle(){
+        ActivitySimulator.outputDetectedActivity(UserActivities.BUS);
+        currentState = UserActivities.BUS;
+        lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+    }
+
+    private void outputStateWalking(){
+        ActivitySimulator.outputDetectedActivity(UserActivities.WALKING);
+        currentState = UserActivities.WALKING;
+        lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+    }
+
+    private void outputStateIdleIndoor(){
+        ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
+        currentState = UserActivities.IDLE_INDOOR;
+        lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+    }
+
+    private void outputStateIdleOutdoor(){
+        ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
+        currentState = UserActivities.IDLE_OUTDOOR;
+        lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
+    }
+
     private void vehicleOrWalking(){
-        if(isOnVehicle) {
-            ActivitySimulator.outputDetectedActivity(UserActivities.BUS);
-            currentState = UserActivities.BUS;
-            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
-        }
-        else {
-            ActivitySimulator.outputDetectedActivity(UserActivities.WALKING);
-            currentState = UserActivities.WALKING;
-            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
-        }
+        if(isOnVehicle)
+            outputStateVechicle();
+        else
+            outputStateWalking();
     }
 
     private void idlingIndoorOrOutdoor(){
-        if(isLowLight) {
-            ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_INDOOR);
-            currentState = UserActivities.IDLE_INDOOR;
-            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
-//            System.out.println(debugLight);
-        }
-        else{
-            ActivitySimulator.outputDetectedActivity(UserActivities.IDLE_OUTDOOR);
-            currentState = UserActivities.IDLE_OUTDOOR;
-            lastStateChangeTimestamp = ActivitySimulator.currentTimeMillis();
-
-        }
+        if(isLowLight)
+            outputStateIdleIndoor();
+        else
+            outputStateIdleOutdoor();
     }
 
     private boolean determineStability(){
@@ -444,7 +454,7 @@ public class ActivityDetection {
                         if (isLowLight)
                             return;
                         else
-                            idlingIndoorOrOutdoor();
+                            outputStateIdleOutdoor();
                     } else if (!isFluctuating)
                         vehicleOrWalking();
                     else{
@@ -462,7 +472,7 @@ public class ActivityDetection {
                         if (!isLowLight)
                             return;
                         else
-                            idlingIndoorOrOutdoor();
+                            outputStateIdleIndoor();
                     } else if (!isFluctuating)
                         vehicleOrWalking();
                     else{
@@ -480,7 +490,7 @@ public class ActivityDetection {
                         if (!isOnVehicle)
                             return;
                         else
-                            vehicleOrWalking();
+                            outputStateVechicle();
                     }
                     else
                         idlingIndoorOrOutdoor();
@@ -494,7 +504,7 @@ public class ActivityDetection {
                     else if (isMagStillForDuration)
                         idlingIndoorOrOutdoor();
                     else
-                        vehicleOrWalking();
+                        outputStateWalking();
                     break;
                 }
                 default:
