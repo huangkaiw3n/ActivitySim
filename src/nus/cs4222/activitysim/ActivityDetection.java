@@ -190,12 +190,12 @@ public class ActivityDetection {
      */
     private void checkMagStill(long timestamp){
 
-        if (timestamp - phoneMovedTimestamp > 30000 && !isPhoneMoving){ //phone still for more than x seconds
+        if (timestamp - phoneMovedTimestamp > MAG_STABLE_DURATION && !isPhoneMoving){ //phone still for more than x seconds
             isMagStillForDuration = true;
             isFluctuating = false;
             return;
         }
-        else if (timestamp - phoneMovedTimestamp > 15000 && isPhoneMoving){ //phone moved for more than x seconds
+        else if (timestamp - phoneMovedTimestamp > MAG_MOVING_DURATION && isPhoneMoving){ //phone moved for more than x seconds
             isMagStillForDuration = false;
             isFluctuating = false;
             return;
@@ -208,7 +208,7 @@ public class ActivityDetection {
             fluctuatingTimestamp = timestamp;
             isFluctuating = true;
         }
-        else if (timestamp - fluctuatingTimestamp > 40000){ //phone was unstable for more than x seconds
+        else if (timestamp - fluctuatingTimestamp > MAG_FLUCTUATING_DURATION){ //phone was unstable for more than x seconds
             isMagStillForDuration = false;
             return;
         }
@@ -292,9 +292,7 @@ public class ActivityDetection {
         for (float val : luxValues) sum += val;
         luxAvg = (sum / luxCounter);
 
-        debugLight = luxAvg;
-
-        if (luxAvg < 350f)
+        if (luxAvg < LIGHT_THRESHOLD)
             isLowLight = true;
         else
             isLowLight = false;
@@ -354,10 +352,9 @@ public class ActivityDetection {
             }
             else {
                 if (isSpeedHigh) {
-                    isSpeedHigh = false;
                     slowBusTimestamp = timestamp;
                 }
-                if (timestamp - slowBusTimestamp > 1000 * 130){ //delay to decide user is now off vehicle
+                if (timestamp - slowBusTimestamp > LOW_SPEED_DURATION){ //delay to decide user is now off vehicle
                     isOnVehicle = false;
                 }
                 isSpeedHigh = false;
@@ -425,12 +422,12 @@ public class ActivityDetection {
     private Runnable mainAlgo = new Runnable() {
         public void run() {
             if (mainAlgoFirstRun){
-                executeLater(mainAlgo, 70000);
+                executeLater(mainAlgo, MAINALGO_INITIAL_DELAY);
                 mainAlgoFirstRun = false;
                 return;
             }
             else
-                executeLater(mainAlgo, 2000);
+                executeLater(mainAlgo, MAINALGO_POLL_DELAY);
 
             switch (currentState){
                 case NONE: {
@@ -441,7 +438,7 @@ public class ActivityDetection {
                     break;
                 }
                 case IDLE_INDOOR: {
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < MAINALGO_STATECHANGE_MINTIME)
                         return;
                     if (isMagStillForDuration) {
                         if (isLowLight)
@@ -459,7 +456,7 @@ public class ActivityDetection {
                     break;
                 }
                 case IDLE_OUTDOOR: {
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < MAINALGO_STATECHANGE_MINTIME)
                         return;
                     if (isMagStillForDuration) {
                         if (!isLowLight)
@@ -477,7 +474,7 @@ public class ActivityDetection {
                     break;
                 }
                 case WALKING: {
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < MAINALGO_STATECHANGE_MINTIME)
                         return;
                     if (!isMagStillForDuration) {
                         if (!isOnVehicle)
@@ -490,7 +487,7 @@ public class ActivityDetection {
                     break;
                 }
                 case BUS: {
-                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < 20000)
+                    if (ActivitySimulator.currentTimeMillis() - lastStateChangeTimestamp < MAINALGO_STATECHANGE_MINTIME)
                         return;
                     if (isOnVehicle)
                         return;
@@ -528,7 +525,6 @@ public class ActivityDetection {
     private SVY21Coordinate previousCoord;
     private long previousCoordTimestamp;
     private boolean isSpeedHigh = false;
-    private static final float SPEED_THRESHOLD = 5;
     private boolean isOnVehicle = false;
 
     //Variables Lux Data processing
@@ -545,5 +541,40 @@ public class ActivityDetection {
     private boolean mainAlgoFirstRun = true;
     private long slowBusTimestamp = 0;
     private long lastStateChangeTimestamp = 0;
-    private float debugLight;
+
+    /* ------------ Delays AND Variables for Tweaking Algo Performance ---------- */
+    /* -------------------------------------------------------------------------- */
+
+    //User is considered to be idling if mag was completely stable (not moving) for this duration
+    private static final int MAG_STABLE_DURATION = 30000;
+
+    //User is either Walking or Vechicle if mag was continuously unstable (Moving) for this duration
+    private static final int MAG_MOVING_DURATION = 15000;
+
+    //If Mag was not completely stable nor was it continuously unstable after this duration, then mag is fluctuating.
+    //Decision of User is idling or not will then be based on whether the majority of the previous readings was Moving
+    //or not moving.
+    private static final int MAG_FLUCTUATING_DURATION = 40000;
+
+    //If speed has been low for longer than this duration, user is considered to be off vehicle
+    private static final float LOW_SPEED_DURATION = 130000;
+
+    //User is on vehicle if speed exceeds this threshold. If speed is lower than this threshold for LOW_SPEED_DURATION,
+    //user is no longer on vechicle
+    private static final float SPEED_THRESHOLD = 5;
+
+    //If light is below this threshold, user is indoors, else, outdoors.
+    private static final float LIGHT_THRESHOLD = 350f;
+
+    //Initial delay to collect sensory data before outputing the first state
+    private static final int MAINALGO_INITIAL_DELAY = 70000;
+
+    //Rate the main algo is called, i.e, every 2000ms.
+    private static final int MAINALGO_POLL_DELAY = 2000;
+
+    //Minimum elapsed time to allow a state change after the state has just been updated
+    private static final int MAINALGO_STATECHANGE_MINTIME = 20000;
+
+    /* -------------------------------------------------------------------------- */
+    /* -------------------------------------------------------------------------- */
 }
