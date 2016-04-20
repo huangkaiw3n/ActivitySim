@@ -556,10 +556,10 @@ public class ActivityDetection {
 
     //User is moving if the current mag x or current mag y values differs with the
     //running average of the mag x or mag y values by this threshold.
-    private static final int MX_THRESHOLD = 3;
+    private static final int MX_THRESHOLD = 2;
 
     //User is considered to be Idling if mag was completely stable (not moving) for this duration
-    private static final int MAG_STABLE_DURATION = 30000;
+    private static final int MAG_STABLE_DURATION = 25000;
 
     //User is either Walking or Vechicle if mag was continuously unstable (Moving) for this duration
     private static final int MAG_MOVING_DURATION = 15000;
@@ -570,17 +570,17 @@ public class ActivityDetection {
     private static final int MAG_FLUCTUATING_DURATION = 40000;
 
     //If speed has been low for longer than this duration, user is considered to be off vehicle
-    private static final float LOW_SPEED_DURATION = 130000;
+    private static final float LOW_SPEED_DURATION = 125000;
 
     //User is on vehicle if speed exceeds this threshold. If speed is lower than this threshold for LOW_SPEED_DURATION,
     //user is no longer on vechicle
-    private static final float SPEED_THRESHOLD = 5;
+    private static final float SPEED_THRESHOLD = 5.5f;
 
     //If light is below this threshold, user is indoors, else, outdoors.
     private static final float LIGHT_THRESHOLD = 350f;
 
     //Initial delay to collect sensory data before outputing the first state
-    private static final int MAINALGO_INITIAL_DELAY = 70000;
+    private static final int MAINALGO_INITIAL_DELAY = 30000;
 
     //Rate the main algo is called, i.e, every 2000ms.
     private static final int MAINALGO_POLL_DELAY = 2000;
