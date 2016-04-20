@@ -176,7 +176,9 @@ public class ActivityDetection {
             }
         }
 
-        phoneMovementRecord[magRunningAvgIndex] = isPhoneMoving;
+        phoneMovementRecord[phoneMovementIndex] = isPhoneMoving;
+
+        phoneMovementIndex = (phoneMovementIndex + 1) % PHONE_MOVEMENT_SIZE;
 
         checkMagStill(timestamp);
 
@@ -525,7 +527,8 @@ public class ActivityDetection {
     private long fluctuatingTimestamp = 0;
     private boolean isFluctuating = false;
     private boolean isMagStillForDuration = true;
-    private boolean[] phoneMovementRecord = new boolean[40];
+    private int phoneMovementIndex = 0;
+    private boolean[] phoneMovementRecord = new boolean[PHONE_MOVEMENT_SIZE];
 
     //Variables for Loc Data processing
     private boolean isFirstLocReading = true;
@@ -559,7 +562,7 @@ public class ActivityDetection {
     private static final int MX_THRESHOLD = 2;
 
     //User is considered to be Idling if mag was completely stable (not moving) for this duration
-    private static final int MAG_STABLE_DURATION = 25000;
+    private static final int MAG_STABLE_DURATION = 20000;
 
     //User is either Walking or Vechicle if mag was continuously unstable (Moving) for this duration
     private static final int MAG_MOVING_DURATION = 15000;
@@ -568,6 +571,9 @@ public class ActivityDetection {
     //Decision of User is idling or not will then be based on whether the majority of the previous readings was Moving
     //or not moving.
     private static final int MAG_FLUCTUATING_DURATION = 40000;
+
+    //Determines how many previous readings of whether the phone was moving or not is saved
+    private static final int PHONE_MOVEMENT_SIZE = 100;
 
     //If speed has been low for longer than this duration, user is considered to be off vehicle
     private static final float LOW_SPEED_DURATION = 125000;
