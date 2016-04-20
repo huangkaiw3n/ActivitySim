@@ -511,7 +511,6 @@ public class ActivityDetection {
     private int mxAvg, myAvg;
     private int magRunningAvgIndex;
     private static final int NUM_AVERAGES_MX = 40;
-    private static final int MX_THRESHOLD = 3;
     private int magCounter;
     private long fluctuatingTimestamp = 0;
     private boolean isFluctuating = false;
@@ -545,7 +544,11 @@ public class ActivityDetection {
     /* ------------ Delays AND Variables for Tweaking Algo Performance ---------- */
     /* -------------------------------------------------------------------------- */
 
-    //User is considered to be idling if mag was completely stable (not moving) for this duration
+    //User is moving if the current mag x or current mag y values differs with the
+    //running average of the mag x or mag y values by this threshold.
+    private static final int MX_THRESHOLD = 3;
+
+    //User is considered to be Idling if mag was completely stable (not moving) for this duration
     private static final int MAG_STABLE_DURATION = 30000;
 
     //User is either Walking or Vechicle if mag was continuously unstable (Moving) for this duration
